@@ -133,7 +133,7 @@ function calculateSolvePoints(
   userMaxRating: number,
   solveRating: number
 ): number {
-  const weight = solveRating / 1000;
+  const weight = Number((solveRating / 1000).toFixed(2));
   const diff = solveRating - userMaxRating;
   return Math.max(20, Math.min(200, diff)) * weight;
 }
