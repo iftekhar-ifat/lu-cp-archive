@@ -1,13 +1,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useStrictSession } from "@/hooks/use-strict-session";
 import { hasPermission } from "@/utils/permissions";
 import { Sparkles } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function GenerateLeaderboardLink() {
-  const session = useStrictSession();
+  const { data: session } = useSession();
+
+  if (!session) {
+    return null;
+  }
 
   const hasPermissionToGenerate = hasPermission(
     session.user.user_type,

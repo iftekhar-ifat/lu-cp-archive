@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "./lib/auth";
 
-const PUBLIC_ROUTES = ["/", /^\/api\/auth\/.*/, "/user-guide"];
+const PUBLIC_ROUTES = [
+  "/",
+  /^\/api\/auth\/.*/,
+  "/user-guide",
+  "/dashboard/leaderboard",
+];
 
 const isPublicRoute = (pathname: string) => {
   return PUBLIC_ROUTES.some((route) =>
