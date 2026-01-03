@@ -1,36 +1,134 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LU Competitive Programming Archive
 
-## Getting Started
+A platform for Leading University students to practice competitive programming, track progress, and compete with peers.
 
-First, run the development server:
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL database
+- npm/yarn package manager
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Iftekhar-Ifat/lu-cp-archive.git
+cd lu-cp-archive
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create `.env.local`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/lu_cp_archive"
+NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_URL="http://localhost:3000"
+GITHUB_ID="your-github-id"
+GITHUB_SECRET="your-github-secret"
+```
 
-## Learn More
+### Run Locally
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx prisma migrate dev
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Visit [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack
 
-## Deploy on Vercel
+**Frontend:** Next.js 14, TypeScript, Tailwind CSS, React Query, Radix UI  
+**Backend:** Prisma, PostgreSQL, NextAuth.js  
+**Tools:** ESLint, Prettier, Husky
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/              # Next.js App Router
+│   ├── dashboard/    # Main features
+│   ├── api/          # API routes
+│   ├── profile/      # User profiles
+│   └── user-guide/   # Documentation
+├── components/       # React components
+├── lib/             # Configuration (auth, db)
+└── utils/           # Helpers & schemas
+prisma/             # Database & migrations
+```
+
+## Development
+
+```bash
+npm run dev         # Start dev server
+npm run build       # Production build
+npm start           # Run production
+npm run lint:fix    # Fix linting issues
+npm run prettier    # Format code
+
+# Database
+npx prisma studio  # Prisma GUI
+npx prisma migrate dev --name description  # Create migration
+npx prisma db seed # Seed data
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make changes and commit: `git commit -m "feat: description"`
+4. Push to branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+### Code Style
+
+- Use TypeScript with strict mode
+- Format with Prettier (auto on commit)
+- Follow ESLint rules (auto on commit)
+
+## Resources
+
+- **User Guide:** Visit `/user-guide` on the site
+- **Docs:** [Next.js](https://nextjs.org/docs), [Prisma](https://prisma.io/docs)
+- **Community:** [LU-ACM Facebook](https://www.facebook.com/profile.php?id=61572507621970)
+
+## Troubleshooting
+
+**Database connection error:**
+
+```bash
+# Check PostgreSQL is running and DATABASE_URL is correct
+psql -c "SELECT 1"
+```
+
+**Prisma client issues:**
+
+```bash
+npx prisma generate
+rm -rf node_modules/.prisma
+npm install
+```
+
+**Build errors:**
+
+```bash
+rm -rf .next
+npm run build
+```
+
+## License
+
+Open source - see LICENSE file for details.
+
+## Support
+
+- **GitHub Issues** - Report bugs or request features
+- **LU-ACM** - Community support and inquiries
+
+---
+
+Last Updated: January 2026  
+Ready for contributions! 🚀
