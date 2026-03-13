@@ -2,8 +2,8 @@
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, X } from "lucide-react";
-import { useRef } from "react";
+import { Download, Loader2, X } from "lucide-react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { Icons } from "@/components/icons";
 
@@ -36,13 +36,17 @@ export default function AchievementDialog({
   user,
 }: AchievementDialogProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async () => {
     if (!cardRef.current || !badge) return;
+
     try {
+      setIsDownloading(true);
+
       const domToImage = (await import("dom-to-image-more")).default;
 
-      const blob = await domToImage.toPng(cardRef.current, {
+      const dataUrl = await domToImage.toPng(cardRef.current, {
         scale: 3,
         bgcolor: "#0a0a0a",
         style: {
@@ -63,10 +67,12 @@ export default function AchievementDialog({
 
       const link = document.createElement("a");
       link.download = `${badge.name.replace(/\s+/g, "-").toLowerCase()}-achievement.png`;
-      link.href = blob;
+      link.href = dataUrl;
       link.click();
     } catch (err) {
       console.error("Failed to download image:", err);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -529,9 +535,23 @@ export default function AchievementDialog({
 
         {/* Download button */}
         <div className="mt-3 flex justify-end px-1">
-          <Button variant="outline" size="sm" onClick={handleDownload}>
-            <Download className="h-4 w-4" />
-            Download
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownload}
+            disabled={isDownloading}
+          >
+            {isDownloading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Downloading...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Download
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>

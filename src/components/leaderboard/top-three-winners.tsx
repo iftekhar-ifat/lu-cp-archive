@@ -2,35 +2,59 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { type Leaderboard } from "@/utils/schema/leaderboard";
-import { User } from "lucide-react";
+import { MoreHorizontal, User } from "lucide-react";
 import Link from "next/link";
+import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { Button } from "../ui/button";
+import { useSession } from "next-auth/react";
+import { hasPermission } from "@/utils/permissions";
+import AchievementAssignDropdown from "./achievement-assign-dropdown";
 
 export default function TopThreeWinners({
   winners,
 }: {
   winners: Leaderboard[];
 }) {
-  const sortedWinners = [...winners].sort((a, b) => a.rank - b.rank);
+  const { data: session } = useSession();
+  const canAssignAchievements = session
+    ? hasPermission(session.user.user_type, "assign-achievements")
+    : false;
 
+  const sortedWinners = [...winners].sort((a, b) => a.rank - b.rank);
   const [firstPlace, secondPlace, thirdPlace] = sortedWinners.slice(0, 3);
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       <div className="order-2 md:order-1">
         {secondPlace && (
-          <WinnerCard winner={secondPlace} variant="second" size="md" />
+          <WinnerCard
+            winner={secondPlace}
+            variant="second"
+            size="md"
+            hasAchievementChangePermission={canAssignAchievements}
+          />
         )}
       </div>
 
       <div className="order-1 md:order-2">
         {firstPlace && (
-          <WinnerCard winner={firstPlace} variant="first" size="lg" />
+          <WinnerCard
+            winner={firstPlace}
+            variant="first"
+            size="lg"
+            hasAchievementChangePermission={canAssignAchievements}
+          />
         )}
       </div>
 
       <div className="order-3">
         {thirdPlace && (
-          <WinnerCard winner={thirdPlace} variant="third" size="md" />
+          <WinnerCard
+            winner={thirdPlace}
+            variant="third"
+            size="md"
+            hasAchievementChangePermission={canAssignAchievements}
+          />
         )}
       </div>
     </div>
@@ -41,9 +65,15 @@ type WinnerCardProps = {
   winner: Leaderboard;
   variant: "first" | "second" | "third";
   size: "md" | "lg";
+  hasAchievementChangePermission: boolean;
 };
 
-function WinnerCard({ winner, variant, size }: WinnerCardProps) {
+function WinnerCard({
+  winner,
+  variant,
+  size,
+  hasAchievementChangePermission,
+}: WinnerCardProps) {
   const isLarge = size === "lg";
 
   const variantMap = {
@@ -71,8 +101,21 @@ function WinnerCard({ winner, variant, size }: WinnerCardProps) {
 
   return (
     <Card
-      className={`flex flex-col items-center border bg-card p-6 ${isLarge ? "transform md:-translate-y-4" : ""}`}
+      className={`relative flex flex-col items-center border bg-card p-6 ${isLarge ? "transform md:-translate-y-4" : ""}`}
     >
+      {hasAchievementChangePermission && (
+        <div className="absolute right-2 top-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <AchievementAssignDropdown />
+          </DropdownMenu>
+        </div>
+      )}
       <CardContent className="flex w-full flex-col items-center p-0 pt-6">
         <div className="relative mb-4">
           <Badge

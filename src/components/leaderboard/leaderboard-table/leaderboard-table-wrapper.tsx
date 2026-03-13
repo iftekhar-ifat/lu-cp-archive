@@ -77,7 +77,8 @@ export default function LeaderboardTableWrapper({
       </div>
       <LeaderboardTable
         columns={leaderboard_table_column}
-        data={leaderboardData.rest}
+        // data={leaderboardData.rest}
+        data={leaderboardData.topThree} // NEED TO FIX
       />
     </div>
   );

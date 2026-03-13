@@ -90,6 +90,7 @@ export default function Achievements() {
                 onClick={() => handleBadgeClick(badge)}
                 className="group flex cursor-pointer flex-col items-center rounded-xl border bg-muted/30 p-4 text-center transition-all duration-300 hover:scale-[1.02] hover:bg-muted/60 hover:shadow-md"
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={badge.image}
                   alt={badge.name}
@@ -99,9 +100,6 @@ export default function Achievements() {
                 <p className="mt-1 font-mono text-xs text-muted-foreground/70">
                   {badge.period}
                 </p>
-                <span className="mt-3 text-[11px] font-medium text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                  View & Share →
-                </span>
               </button>
             ))}
           </div>

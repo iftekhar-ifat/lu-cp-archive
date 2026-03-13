@@ -10,18 +10,36 @@ export function isolateTopThree(leaderboard: Leaderboard[]) {
   return { topThree, rest };
 }
 
-export function getInitialDate(
+export function formattedLBDates(
   leaderboardDates: LeaderboardDateType[],
   searchParams: SearchParams
-): { year: number; month: number } | null {
+): {
+  latestLBDate: { year: number; month: number } | null;
+  otherLBDates: LeaderboardDateType[];
+} {
+  let latestLBDate: { year: number; month: number } | null = null;
+
   if (searchParams.latest) {
-    return leaderboardDates[0] || null;
+    latestLBDate = leaderboardDates[0] || null;
+  } else {
+    latestLBDate =
+      leaderboardDates.find(
+        (date) =>
+          date.year === searchParams.year && date.month === searchParams.month
+      ) || null;
   }
 
-  const matchingDate = leaderboardDates.find(
+  const otherLBDates = leaderboardDates.filter(
     (date) =>
-      date.year === searchParams.year && date.month === searchParams.month
+      !(
+        latestLBDate &&
+        date.year === latestLBDate.year &&
+        date.month === latestLBDate.month
+      )
   );
 
-  return matchingDate || null;
+  return {
+    latestLBDate,
+    otherLBDates,
+  };
 }

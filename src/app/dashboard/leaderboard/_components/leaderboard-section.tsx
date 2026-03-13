@@ -9,9 +9,11 @@ import { useSearchParams } from "next/navigation";
 export default function LeaderboardSection({
   initialDate,
   allowedMonths,
+  otherLBDates,
 }: {
   initialDate: LeaderboardDateType;
   allowedMonths: LeaderboardDateType[];
+  otherLBDates: LeaderboardDateType[];
 }) {
   const searchParams = useSearchParams();
 
