@@ -10,12 +10,18 @@ import { leaderboard_table_column } from "./leaderboard-table-column";
 import { isolateTopThree } from "../leaderboard-helper";
 import TopThreeWinners from "../top-three-winners";
 import { format } from "date-fns";
+import { useSession } from "next-auth/react";
+import { hasPermission } from "@/utils/permissions";
 
 export default function LeaderboardTableWrapper({
   leaderboardDate,
+  isPreviousLB,
 }: {
   leaderboardDate: Date;
+  isPreviousLB: boolean;
 }) {
+  const { data: session } = useSession();
+
   const {
     data: leaderboardData,
     isLoading,
@@ -59,6 +65,12 @@ export default function LeaderboardTableWrapper({
     }
   }
 
+  // If previous Leaderboard is selected and if has permission then can assign achievements
+  const canAssignAchievements =
+    isPreviousLB && session
+      ? hasPermission(session.user.user_type, "assign-achievements")
+      : false;
+
   return (
     <div>
       {leaderboardData.lastUpdated && (
@@ -73,10 +85,13 @@ export default function LeaderboardTableWrapper({
       )}
 
       <div className="mb-4">
-        <TopThreeWinners winners={leaderboardData.topThree} />
+        <TopThreeWinners
+          winners={leaderboardData.topThree}
+          canAssignAchievements={canAssignAchievements}
+        />
       </div>
       <LeaderboardTable
-        columns={leaderboard_table_column}
+        columns={leaderboard_table_column(canAssignAchievements)}
         // data={leaderboardData.rest}
         data={leaderboardData.topThree} // NEED TO FIX
       />

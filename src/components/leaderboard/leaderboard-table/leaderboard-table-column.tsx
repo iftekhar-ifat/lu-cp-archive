@@ -10,7 +10,7 @@ import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import AchievementAssignDropdown from "../achievement-assign-dropdown";
 
-export const leaderboard_table_column: ColumnDef<Leaderboard>[] = [
+const baseColumns: ColumnDef<Leaderboard>[] = [
   {
     accessorKey: "rank",
     header: "Rank",
@@ -52,53 +52,30 @@ export const leaderboard_table_column: ColumnDef<Leaderboard>[] = [
       );
     },
   },
-  {
-    id: "actions",
-    header: "Actions",
-    enableHiding: true,
-    cell: ({ row }) => {
-      const selectedUser = row.original;
+];
 
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      // const queryClient = useQueryClient();
-
-      /* const handleChangeUserType = async (newType: USER_TYPE) => {
-        const userId = selectedUser.id;
-        toast.promise(
-          async () => {
-            const actionResult = await changeUserType({ userId, newType });
-            const result = unwrapActionResult(actionResult);
-            queryClient.invalidateQueries({
-              queryKey: ["standard-users"],
-            });
-            return result;
-          },
-          {
-            loading: (
-              <>
-                Changing to <UserTypeBadge user_type={newType} />
-              </>
-            ),
-            success: (
-              <>
-                User is now <UserTypeBadge user_type={newType} />
-              </>
-            ),
-            error: "Failed to change user type",
-          }
-        );
-      }; */
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <AchievementAssignDropdown />
-        </DropdownMenu>
-      );
-    },
+const actionsColumn: ColumnDef<Leaderboard> = {
+  id: "actions",
+  header: "Actions",
+  cell: ({ row }) => {
+    const selectedUser = row.original;
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal />
+          </Button>
+        </DropdownMenuTrigger>
+        <AchievementAssignDropdown />
+      </DropdownMenu>
+    );
   },
+};
+
+export const leaderboard_table_column = (
+  canAssignAchievements: boolean
+): ColumnDef<Leaderboard>[] => [
+  ...baseColumns,
+  ...(canAssignAchievements ? [actionsColumn] : []),
 ];

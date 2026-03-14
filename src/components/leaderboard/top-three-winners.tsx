@@ -6,20 +6,15 @@ import { MoreHorizontal, User } from "lucide-react";
 import Link from "next/link";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
-import { useSession } from "next-auth/react";
-import { hasPermission } from "@/utils/permissions";
 import AchievementAssignDropdown from "./achievement-assign-dropdown";
 
 export default function TopThreeWinners({
   winners,
+  canAssignAchievements,
 }: {
   winners: Leaderboard[];
+  canAssignAchievements: boolean;
 }) {
-  const { data: session } = useSession();
-  const canAssignAchievements = session
-    ? hasPermission(session.user.user_type, "assign-achievements")
-    : false;
-
   const sortedWinners = [...winners].sort((a, b) => a.rank - b.rank);
   const [firstPlace, secondPlace, thirdPlace] = sortedWinners.slice(0, 3);
 

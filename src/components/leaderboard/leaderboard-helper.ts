@@ -17,26 +17,24 @@ export function formattedLBDates(
   latestLBDate: { year: number; month: number } | null;
   otherLBDates: LeaderboardDateType[];
 } {
+  const sortedDates = [...leaderboardDates].sort(
+    (a, b) => b.year - a.year || b.month - a.month
+  );
+
+  // When search param is `latest`, use the most recent date; otherwise find the selected date by year/month
   let latestLBDate: { year: number; month: number } | null = null;
 
   if (searchParams.latest) {
-    latestLBDate = leaderboardDates[0] || null;
+    latestLBDate = sortedDates[0] || null;
   } else {
     latestLBDate =
-      leaderboardDates.find(
+      sortedDates.find(
         (date) =>
           date.year === searchParams.year && date.month === searchParams.month
       ) || null;
   }
 
-  const otherLBDates = leaderboardDates.filter(
-    (date) =>
-      !(
-        latestLBDate &&
-        date.year === latestLBDate.year &&
-        date.month === latestLBDate.month
-      )
-  );
+  const otherLBDates = sortedDates.slice(1);
 
   return {
     latestLBDate,
