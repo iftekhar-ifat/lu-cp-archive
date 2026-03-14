@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { type AchievementType, AchievementTypeSchema } from "@/types/types";
 import {
   leaderboardDataSchema,
   leaderboardDateSchema,
@@ -79,4 +80,66 @@ async function getLeaderboardDates() {
   }
 }
 
-export { getLeaderboard, getLeaderboardDates };
+async function addAchievement(
+  userId: string,
+  title: AchievementType,
+  rank: number,
+  month: number,
+  year: number
+) {
+  try {
+    const validateData = AchievementTypeSchema.safeParse(title);
+
+    if (validateData.error) {
+      return { error: "Invalid data type" };
+    }
+
+    // Get start/end dates from the leaderboard entry for that month/year
+    const leaderboardEntry = await prisma.leaderboards.findFirst({
+      where: { month, year },
+      select: { created_at: true, updated_at: true },
+    });
+
+    if (!leaderboardEntry) {
+      return { error: "Leaderboard entry not found for the given month/year" };
+    }
+
+    const achievement = await prisma.achievements.create({
+      data: {
+        user_id: userId,
+        title,
+        rank,
+        month,
+        year,
+        start_date: leaderboardEntry.created_at,
+        end_date: leaderboardEntry.updated_at,
+      },
+    });
+
+    return { success: true, data: achievement };
+  } catch (error) {
+    console.error("Error adding achievement:", error);
+    return { error: "Failed to add achievement" };
+  }
+}
+
+async function getAchievementsByMonthYear(month: number, year: number) {
+  try {
+    const achievements = await prisma.achievements.findMany({
+      where: { month, year },
+      select: { title: true },
+    });
+
+    return { success: true, data: achievements };
+  } catch (error) {
+    console.error("Error fetching achievements:", error);
+    return { error: "Failed to fetch achievements" };
+  }
+}
+
+export {
+  getLeaderboard,
+  getLeaderboardDates,
+  addAchievement,
+  getAchievementsByMonthYear,
+};

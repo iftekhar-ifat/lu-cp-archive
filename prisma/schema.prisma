@@ -216,11 +216,15 @@ model achievements {
   user_id    String
   title      AchievementTitle
   rank       Int
+  month      Int // 1-12
+  year       Int
   start_date DateTime
   end_date   DateTime
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  user users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user users @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, title, month, year])
 }

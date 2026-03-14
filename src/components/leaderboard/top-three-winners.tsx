@@ -7,13 +7,22 @@ import Link from "next/link";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
 import AchievementAssignDropdown from "./achievement-assign-dropdown";
+import { type AchievementType } from "@/types/types";
+
+// For context: type AchievementType = "CHAMPION" | "FIRST_RUNNER_UP" | "SECOND_RUNNER_UP" | "BEST_FEMALE_PROGRAMMER"
 
 export default function TopThreeWinners({
   winners,
   canAssignAchievements,
+  showAchievementBadge,
+  leaderboardDate,
+  assignedTitles,
 }: {
   winners: Leaderboard[];
   canAssignAchievements: boolean;
+  showAchievementBadge: boolean;
+  leaderboardDate: Date;
+  assignedTitles: AchievementType[] | [];
 }) {
   const sortedWinners = [...winners].sort((a, b) => a.rank - b.rank);
   const [firstPlace, secondPlace, thirdPlace] = sortedWinners.slice(0, 3);
@@ -27,6 +36,8 @@ export default function TopThreeWinners({
             variant="second"
             size="md"
             hasAchievementChangePermission={canAssignAchievements}
+            leaderboardDate={leaderboardDate}
+            assignedTitles={assignedTitles}
           />
         )}
       </div>
@@ -38,6 +49,8 @@ export default function TopThreeWinners({
             variant="first"
             size="lg"
             hasAchievementChangePermission={canAssignAchievements}
+            leaderboardDate={leaderboardDate}
+            assignedTitles={assignedTitles}
           />
         )}
       </div>
@@ -49,6 +62,8 @@ export default function TopThreeWinners({
             variant="third"
             size="md"
             hasAchievementChangePermission={canAssignAchievements}
+            leaderboardDate={leaderboardDate}
+            assignedTitles={assignedTitles}
           />
         )}
       </div>
@@ -61,6 +76,8 @@ type WinnerCardProps = {
   variant: "first" | "second" | "third";
   size: "md" | "lg";
   hasAchievementChangePermission: boolean;
+  leaderboardDate: Date;
+  assignedTitles: AchievementType[] | [];
 };
 
 function WinnerCard({
@@ -68,6 +85,8 @@ function WinnerCard({
   variant,
   size,
   hasAchievementChangePermission,
+  leaderboardDate,
+  assignedTitles,
 }: WinnerCardProps) {
   const isLarge = size === "lg";
 
@@ -107,7 +126,12 @@ function WinnerCard({
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <AchievementAssignDropdown />
+            <AchievementAssignDropdown
+              winner={winner}
+              year={leaderboardDate.getFullYear()}
+              month={leaderboardDate.getMonth() + 1}
+              assignedTitles={assignedTitles}
+            />
           </DropdownMenu>
         </div>
       )}
@@ -137,10 +161,17 @@ function WinnerCard({
             </Avatar>
           </div>
         </div>
-
-        <h3 className={`font-bold ${isLarge ? "text-xl" : "text-lg"} mb-1`}>
+        <h3
+          className={`w-full text-center font-bold ${isLarge ? "text-xl" : "text-lg"} mb-1 truncate`}
+        >
           {winner.user.name}
         </h3>
+        <Badge
+          variant="secondary"
+          className="mb-3 w-fit max-w-full truncate px-2 py-1 text-xs hover:scale-[1.02]"
+        >
+          {winner.rank}
+        </Badge>
 
         <Link href={`/profile/@${winner.user.user_name}`}>
           <Badge

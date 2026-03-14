@@ -5,7 +5,10 @@ import { unwrapActionResult } from "@/utils/error-helper";
 import Error from "@/components/shared/error";
 import Loading from "@/components/shared/loading";
 import { LeaderboardTable } from "./leaderboard-table";
-import { getLeaderboard } from "@/app/dashboard/leaderboard/leaderboard-actions";
+import {
+  getAchievementsByMonthYear,
+  getLeaderboard,
+} from "@/app/dashboard/leaderboard/leaderboard-actions";
 import { leaderboard_table_column } from "./leaderboard-table-column";
 import { isolateTopThree } from "../leaderboard-helper";
 import TopThreeWinners from "../top-three-winners";
@@ -21,6 +24,12 @@ export default function LeaderboardTableWrapper({
   isPreviousLB: boolean;
 }) {
   const { data: session } = useSession();
+
+  // If previous Leaderboard is selected and if has permission then can assign achievements
+  const canAssignAchievements =
+    isPreviousLB && session
+      ? hasPermission(session.user.user_type, "assign-achievements")
+      : false;
 
   const {
     data: leaderboardData,
@@ -55,7 +64,27 @@ export default function LeaderboardTableWrapper({
     staleTime: Infinity,
   });
 
-  if (isLoading || !leaderboardDate) {
+  const { data: assignedTitles, isLoading: achievementLoading } = useQuery({
+    queryKey: [
+      "achievements",
+      `${leaderboardDate.getFullYear()}-${leaderboardDate.getMonth() + 1}`,
+    ],
+    queryFn: async () => {
+      const result = await getAchievementsByMonthYear(
+        leaderboardDate.getMonth() + 1,
+        leaderboardDate.getFullYear()
+      );
+      const unwrappedResult = unwrapActionResult(result);
+
+      if (!unwrappedResult) return undefined;
+
+      return unwrappedResult.map((item) => item.title);
+    },
+    staleTime: Infinity,
+    enabled: canAssignAchievements,
+  });
+
+  if (isLoading || achievementLoading || !leaderboardDate) {
     return <Loading />;
   }
 
@@ -64,12 +93,6 @@ export default function LeaderboardTableWrapper({
       return <Error message={error?.message} refetch={refetch} />;
     }
   }
-
-  // If previous Leaderboard is selected and if has permission then can assign achievements
-  const canAssignAchievements =
-    isPreviousLB && session
-      ? hasPermission(session.user.user_type, "assign-achievements")
-      : false;
 
   return (
     <div>
@@ -88,6 +111,9 @@ export default function LeaderboardTableWrapper({
         <TopThreeWinners
           winners={leaderboardData.topThree}
           canAssignAchievements={canAssignAchievements}
+          leaderboardDate={leaderboardDate}
+          showAchievementBadge={isPreviousLB}
+          assignedTitles={assignedTitles ?? []}
         />
       </div>
       <LeaderboardTable
