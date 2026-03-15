@@ -6,28 +6,27 @@ import { Download, Loader2, X } from "lucide-react";
 import { useRef, useState } from "react";
 import Image from "next/image";
 import { Icons } from "@/components/icons";
+import { type User } from "next-auth";
 
-export interface BadgeUser {
-  name: string;
-  username: string;
-  avatar: string;
-}
-
-export interface Badge {
+export type Badge = {
   id: number;
-  name: string;
   title: string;
   period: string;
   image: string;
-  rank: number;
-}
+  color: string;
+  extraBadge?: {
+    title: string;
+    image: string;
+    color: string;
+  };
+};
 
-interface AchievementDialogProps {
+type AchievementDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   badge: Badge | null;
-  user: BadgeUser;
-}
+  user: User;
+};
 
 export default function AchievementDialog({
   open,
@@ -66,7 +65,7 @@ export default function AchievementDialog({
       } as any);
 
       const link = document.createElement("a");
-      link.download = `${badge.name.replace(/\s+/g, "-").toLowerCase()}-achievement.png`;
+      link.download = `${badge.title.replace(/\s+/g, "-").toLowerCase()}-achievement.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -78,14 +77,10 @@ export default function AchievementDialog({
 
   if (!badge) return null;
 
-  const rankLabel =
-    badge.rank === 1
-      ? "Champion"
-      : badge.rank === 2
-        ? "1st Runner-up"
-        : badge.rank === 3
-          ? "2nd Runner-up"
-          : `Rank #${badge.rank}`;
+  const color = badge.color;
+  const colorFaint = `${color}70`;
+  const colorFainter = `${color}30`;
+  // const colorBorder = `${color}18`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -163,7 +158,7 @@ export default function AchievementDialog({
                 cy="60"
                 r="100"
                 fill="none"
-                stroke="#f43f5e"
+                stroke={color}
                 strokeWidth="1.2"
                 opacity="0.65"
                 filter="url(#g1)"
@@ -173,7 +168,7 @@ export default function AchievementDialog({
                 cy="60"
                 r="145"
                 fill="none"
-                stroke="#f43f5e"
+                stroke={color}
                 strokeWidth="0.8"
                 opacity="0.35"
                 filter="url(#g1)"
@@ -183,7 +178,7 @@ export default function AchievementDialog({
                 cy="60"
                 r="190"
                 fill="none"
-                stroke="#fb7185"
+                stroke={color}
                 strokeWidth="0.5"
                 opacity="0.2"
                 filter="url(#g2)"
@@ -193,7 +188,7 @@ export default function AchievementDialog({
                 cy="590"
                 r="120"
                 fill="none"
-                stroke="#f43f5e"
+                stroke={color}
                 strokeWidth="1"
                 opacity="0.35"
                 filter="url(#g1)"
@@ -203,7 +198,7 @@ export default function AchievementDialog({
                 cy="590"
                 r="165"
                 fill="none"
-                stroke="#fb7185"
+                stroke={color}
                 strokeWidth="0.6"
                 opacity="0.18"
                 filter="url(#g2)"
@@ -213,13 +208,13 @@ export default function AchievementDialog({
                 y1="330"
                 x2="360"
                 y2="330"
-                stroke="#f43f5e"
+                stroke={color}
                 strokeWidth="0.5"
                 opacity="0.1"
               />
             </svg>
 
-            {/* TOP — Rose bar + user info */}
+            {/* TOP — accent bar + user info */}
             <div
               style={{
                 position: "absolute",
@@ -230,15 +225,15 @@ export default function AchievementDialog({
                 outline: "none",
               }}
             >
-              {/* Rose accent bar */}
+              {/* Accent bar */}
               <div
                 style={{
                   width: 36,
                   height: 2,
-                  backgroundColor: "#f43f5e",
+                  backgroundColor: color,
                   borderRadius: 2,
                   marginBottom: 24,
-                  boxShadow: "0 0 8px #f43f5e, 0 0 18px #f43f5e70",
+                  boxShadow: `0 0 8px ${color}, 0 0 18px ${colorFaint}`,
                   border: "none",
                   outline: "none",
                 }}
@@ -249,7 +244,7 @@ export default function AchievementDialog({
                 style={{
                   fontFamily: "monospace",
                   fontSize: 12,
-                  color: "#f43f5e",
+                  color,
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
                   margin: "0 0 16px",
@@ -287,19 +282,19 @@ export default function AchievementDialog({
                     outline: "none",
                   }}
                 >
-                  {user.avatar ? (
-                    <Image
-                      src={user.avatar}
-                      alt={user.name}
-                      width={60}
-                      height={60}
+                  {user.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={user.image}
+                      alt={user.name || "user"}
+                      width={220}
+                      height={220}
                       crossOrigin="anonymous"
                       style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
+                        objectFit: "contain",
                         border: "none",
                         outline: "none",
+                        filter: `drop-shadow(0 0 16px ${colorFaint}) drop-shadow(0 0 40px ${colorFainter})`,
                       }}
                     />
                   ) : (
@@ -343,17 +338,17 @@ export default function AchievementDialog({
                       outline: "none",
                     }}
                   >
-                    @{user.username}
+                    @{user.user_name}
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* MIDDLE — Badge image */}
+            {/* MIDDLE — Badge image(s) */}
             <div
               style={{
                 position: "absolute",
-                top: 200,
+                top: 230,
                 left: 0,
                 right: 0,
                 display: "flex",
@@ -364,47 +359,128 @@ export default function AchievementDialog({
                 outline: "none",
               }}
             >
-              {/* Badge image */}
-              <div
-                style={{
-                  position: "relative",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "none",
-                  outline: "none",
-                }}
-              >
+              {/* Badge image(s) */}
+              {badge.extraBadge ? (
+                // Two badges side by side
                 <div
                   style={{
-                    position: "absolute",
-                    width: 180,
-                    height: 180,
-                    borderRadius: "50%",
-                    backgroundColor: "#f43f5e",
-                    opacity: 0.1,
-                    filter: "blur(40px)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 16,
                     border: "none",
                     outline: "none",
                   }}
-                />
-                <Image
-                  src={badge.image}
-                  alt={badge.name}
-                  width={220}
-                  height={220}
-                  crossOrigin="anonymous"
+                >
+                  {[
+                    {
+                      image: badge.image,
+                      color: badge.color,
+                      title: badge.title,
+                    },
+                    {
+                      image: badge.extraBadge.image,
+                      color: badge.extraBadge.color,
+                      title: badge.extraBadge.title,
+                    },
+                  ].map((b) => (
+                    <div
+                      key={b.title}
+                      style={{
+                        position: "relative",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 8,
+                        border: "none",
+                        outline: "none",
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          width: 120,
+                          height: 120,
+                          borderRadius: "50%",
+                          backgroundColor: b.color,
+                          opacity: 0.1,
+                          filter: "blur(30px)",
+                          border: "none",
+                          outline: "none",
+                        }}
+                      />
+                      <Image
+                        src={b.image}
+                        alt={b.title}
+                        width={150}
+                        height={150}
+                        crossOrigin="anonymous"
+                        style={{
+                          objectFit: "contain",
+                          border: "none",
+                          outline: "none",
+                          filter: `drop-shadow(0 0 12px ${b.color}60) drop-shadow(0 0 28px ${b.color}30)`,
+                        }}
+                      />
+                      {/* Title label under each badge */}
+                      <span
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: 11,
+                          color: b.color,
+                          letterSpacing: "0.05em",
+                          textAlign: "center",
+                          opacity: 0.9,
+                          border: "none",
+                        }}
+                      >
+                        {b.title}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Single badge
+                <div
                   style={{
-                    objectFit: "contain",
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     border: "none",
                     outline: "none",
-                    filter:
-                      "drop-shadow(0 0 16px #f43f5e60) drop-shadow(0 0 40px #f43f5e30)",
                   }}
-                />
-              </div>
+                >
+                  <div
+                    style={{
+                      position: "absolute",
+                      width: 180,
+                      height: 180,
+                      borderRadius: "50%",
+                      backgroundColor: color,
+                      opacity: 0.1,
+                      filter: "blur(40px)",
+                      border: "none",
+                      outline: "none",
+                    }}
+                  />
+                  <Image
+                    src={badge.image}
+                    alt={badge.title}
+                    width={220}
+                    height={220}
+                    crossOrigin="anonymous"
+                    style={{
+                      objectFit: "contain",
+                      border: "none",
+                      outline: "none",
+                      filter: `drop-shadow(0 0 16px ${colorFaint}) drop-shadow(0 0 40px ${colorFainter})`,
+                    }}
+                  />
+                </div>
+              )}
 
-              {/* Period + rank — centered below badge */}
+              {/* Period pill */}
               <div
                 style={{
                   display: "flex",
@@ -415,7 +491,6 @@ export default function AchievementDialog({
                   outline: "none",
                 }}
               >
-                {/* Period pill */}
                 <div
                   style={{
                     display: "inline-flex",
@@ -438,46 +513,69 @@ export default function AchievementDialog({
                   </span>
                 </div>
 
-                {/* Rank badge */}
+                {/* Title badge(s) */}
                 <div
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
-                    backgroundColor: "#1a1a1a",
-                    border: "1px solid rgba(244,63,94,0.18)",
-                    borderRadius: 6,
-                    padding: "4px 10px",
+                    border: "none",
                     outline: "none",
                   }}
                 >
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      backgroundColor: "#f43f5e",
-                      boxShadow: "0 0 6px #f43f5e",
-                      flexShrink: 0,
-                      display: "inline-block",
-                      border: "none",
-                      outline: "none",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontFamily: "monospace",
-                      fontSize: 12,
-                      color: "#a3a3a3",
-                    }}
-                  >
-                    {rankLabel}
-                  </span>
+                  {[
+                    { title: badge.title, color: badge.color },
+                    ...(badge.extraBadge
+                      ? [
+                          {
+                            title: badge.extraBadge.title,
+                            color: badge.extraBadge.color,
+                          },
+                        ]
+                      : []),
+                  ].map((b) => (
+                    <div
+                      key={b.title}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        backgroundColor: "#1a1a1a",
+                        border: `1px solid ${b.color}18`,
+                        borderRadius: 6,
+                        padding: "4px 10px",
+                        outline: "none",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          backgroundColor: b.color,
+                          boxShadow: `0 0 6px ${b.color}`,
+                          flexShrink: 0,
+                          display: "inline-block",
+                          border: "none",
+                          outline: "none",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontFamily: "monospace",
+                          fontSize: 12,
+                          color: "#a3a3a3",
+                        }}
+                      >
+                        {b.title}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* BOTTOM — Date, rank, platform */}
+            {/* BOTTOM — platform */}
             <div
               style={{
                 position: "absolute",

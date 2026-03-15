@@ -2,7 +2,6 @@
 
 import AchievementDialog, {
   type Badge,
-  type BadgeUser,
 } from "@/components/profile/achievements/achievement-dialog";
 import {
   Card,
@@ -14,49 +13,83 @@ import {
 import { cn } from "@/lib/utils";
 import { Medal } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { unwrapActionResult } from "@/utils/error-helper";
+import { type AchievementType } from "@/types/types";
+import { format } from "date-fns";
+import Loading from "@/components/shared/loading";
+import { getUserAchievements } from "../profile-actions";
+import { type User } from "next-auth";
 
-// ── mock user — swap with your real auth/profile data ──────────────────────
-const CURRENT_USER: BadgeUser = {
-  name: "Alex Johnson",
-  username: "alexj",
-  avatar: "/assets/avatar.jpg", // replace with real avatar path
+const ACHIEVEMENT_IMAGE_MAP: Record<AchievementType, string> = {
+  CHAMPION: "/assets/champion.svg",
+  FIRST_RUNNER_UP: "/assets/first-runner-up.svg",
+  SECOND_RUNNER_UP: "/assets/second-runner-up.svg",
+  BEST_FEMALE_PROGRAMMER: "/assets/best-female-programmer.svg",
 };
 
-export default function Achievements() {
+const ACHIEVEMENT_COLOR_MAP: Record<AchievementType, string> = {
+  CHAMPION: "#f43f5e",
+  FIRST_RUNNER_UP: "#06b6d4",
+  SECOND_RUNNER_UP: "#84cc16",
+  BEST_FEMALE_PROGRAMMER: "#ec4899",
+};
+
+const ACHIEVEMENT_LABEL_MAP: Record<AchievementType, string> = {
+  CHAMPION: "Champion",
+  FIRST_RUNNER_UP: "1st Runner-up",
+  SECOND_RUNNER_UP: "2nd Runner-up",
+  BEST_FEMALE_PROGRAMMER: "Best Female Programmer",
+};
+
+export default function Achievements({ user }: { user: User }) {
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const badges: Badge[] = [
-    {
-      id: 1,
-      name: "100 Problems Solved",
-      title: "Champion",
-      rank: 1,
-      period: "Jan 2025 – Jun 2025",
-      image: "/assets/first-runner-up.svg",
+  const { data: badges, isLoading } = useQuery({
+    queryKey: ["user-achievements", user.id],
+    queryFn: async () => {
+      const result = await getUserAchievements(user.id);
+      const unwrapped = unwrapActionResult(result);
+      if (!unwrapped) return [];
+
+      return unwrapped.reduce((acc: Badge[], a, index) => {
+        const title = a.title as AchievementType;
+        const period = `${format(new Date(a.start_date), "MMM yyyy")} – ${format(new Date(a.end_date), "MMM yyyy")}`;
+
+        if (title === "BEST_FEMALE_PROGRAMMER") {
+          // Check if there's already a ranked badge for the same period
+          const existing = acc.find((b) => b.period === period);
+          if (existing) {
+            existing.extraBadge = {
+              title: ACHIEVEMENT_LABEL_MAP[title],
+              image: ACHIEVEMENT_IMAGE_MAP[title],
+              color: ACHIEVEMENT_COLOR_MAP[title],
+            };
+            return acc;
+          }
+        }
+
+        acc.push({
+          id: index,
+          title: ACHIEVEMENT_LABEL_MAP[title],
+          period,
+          image: ACHIEVEMENT_IMAGE_MAP[title],
+          color: ACHIEVEMENT_COLOR_MAP[title],
+        });
+
+        return acc;
+      }, []);
     },
-    {
-      id: 2,
-      name: "First Contest Win",
-      title: "Champion",
-      rank: 1,
-      period: "Jan 2025 – Jun 2025",
-      image: "/badges/contest-win.png",
-    },
-    {
-      id: 3,
-      name: "Top Contributor",
-      title: "Champion",
-      rank: 1,
-      period: "Jan 2025 – Jun 2025",
-      image: "/badges/top-contributor.png",
-    },
-  ];
+    staleTime: Infinity,
+  });
 
   const handleBadgeClick = (badge: Badge) => {
     setSelectedBadge(badge);
     setDialogOpen(true);
   };
+
+  if (isLoading) return <Loading />;
 
   return (
     <>
@@ -76,33 +109,39 @@ export default function Achievements() {
         </CardHeader>
 
         <CardContent>
-          <div
-            className={cn(
-              "grid gap-4",
-              badges.length === 1
-                ? "grid-cols-1"
-                : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
-            )}
-          >
-            {badges.map((badge) => (
-              <button
-                key={badge.id}
-                onClick={() => handleBadgeClick(badge)}
-                className="group flex cursor-pointer flex-col items-center rounded-xl border bg-muted/30 p-4 text-center transition-all duration-300 hover:scale-[1.02] hover:bg-muted/60 hover:shadow-md"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={badge.image}
-                  alt={badge.name}
-                  className="mb-4 transition-transform duration-300 group-hover:scale-105"
-                />
-                <p className="text-base font-semibold">{badge.title}</p>
-                <p className="mt-1 font-mono text-xs text-muted-foreground/70">
-                  {badge.period}
-                </p>
-              </button>
-            ))}
-          </div>
+          {!badges || badges.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No achievements yet.
+            </p>
+          ) : (
+            <div
+              className={cn(
+                "grid gap-4",
+                badges.length === 1
+                  ? "grid-cols-1"
+                  : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
+              )}
+            >
+              {badges.map((badge) => (
+                <button
+                  key={badge.id}
+                  onClick={() => handleBadgeClick(badge)}
+                  className="group flex cursor-pointer flex-col items-center rounded-xl border bg-muted/30 p-4 text-center transition-all duration-300 hover:scale-[1.02] hover:bg-muted/60 hover:shadow-md"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={badge.image}
+                    alt={badge.title}
+                    className="mb-4 transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <p className="text-base font-semibold">{badge.title}</p>
+                  <p className="mt-1 font-mono text-xs text-muted-foreground/70">
+                    {badge.period}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -110,7 +149,7 @@ export default function Achievements() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         badge={selectedBadge}
-        user={CURRENT_USER}
+        user={user}
       />
     </>
   );

@@ -6,7 +6,6 @@ import {
   leaderboardDataSchema,
   leaderboardDateSchema,
 } from "@/utils/schema/leaderboard";
-import { AchievementTitle } from "@prisma/client";
 import { z } from "zod";
 
 async function getLeaderboard(selectedMonth: number, selectedYear: number) {
@@ -96,7 +95,7 @@ async function addAchievement(
     }
 
     const RANKED_TITLES = AchievementTypeSchema.options.filter(
-      (title) => title !== "BEST_FEMALE_PROGRAMMER"
+      (t) => t !== "BEST_FEMALE_PROGRAMMER"
     );
 
     // If assigning a ranked title, check if user already has one
@@ -106,7 +105,7 @@ async function addAchievement(
           user_id: userId,
           month,
           year,
-          title: { in: RANKED_TITLES }, // check if user already has ANY ranked title except Best Female
+          title: { in: RANKED_TITLES },
         },
       });
 
@@ -117,15 +116,28 @@ async function addAchievement(
       }
     }
 
-    // Get start/end dates from the leaderboard entry for that month/year
-    const leaderboardEntry = await prisma.leaderboards.findFirst({
-      where: { month, year },
-      select: { created_at: true, updated_at: true },
+    // Get all leaderboard periods sorted ascending
+    const allLeaderboards = await prisma.leaderboards.findMany({
+      select: { month: true, year: true },
+      distinct: ["month", "year"],
+      orderBy: [{ year: "asc" }, { month: "asc" }],
     });
 
-    if (!leaderboardEntry) {
+    const currentIndex = allLeaderboards.findIndex(
+      (lb) => lb.month === month && lb.year === year
+    );
+
+    if (currentIndex === -1) {
       return { error: "Leaderboard entry not found for the given month/year" };
     }
+
+    const currentLB = allLeaderboards[currentIndex];
+    const nextLB = allLeaderboards[currentIndex + 1];
+
+    const start_date = new Date(currentLB.year, currentLB.month - 1, 1); // first day of current LB month
+    const end_date = nextLB
+      ? new Date(nextLB.year, nextLB.month - 1, 1) // first day of next LB month
+      : new Date(currentLB.year, currentLB.month, 0, 23, 59, 59, 999); // last day of current LB month as fallback
 
     const achievement = await prisma.achievements.create({
       data: {
@@ -134,8 +146,8 @@ async function addAchievement(
         rank,
         month,
         year,
-        start_date: leaderboardEntry.created_at,
-        end_date: leaderboardEntry.updated_at,
+        start_date,
+        end_date,
       },
     });
 

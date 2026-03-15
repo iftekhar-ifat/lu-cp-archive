@@ -42,7 +42,7 @@ export default async function Profile({
           <ActivityStats userData={user.data} />
           <CodeforcesSettings userData={user.data} />
           <div className="md:col-span-2">
-            <Achievements />
+            <Achievements user={user.data} />
           </div>
         </div>
         {hasViewPermission && isOwner && (
