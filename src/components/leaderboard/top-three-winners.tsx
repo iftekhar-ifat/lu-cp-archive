@@ -8,48 +8,27 @@ import { MoreHorizontal, User } from "lucide-react";
 import Link from "next/link";
 import { DropdownMenu, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Button } from "../ui/button";
-import AchievementAssignDropdown from "./achievement-assign-dropdown";
+import AchievementAssignDropdown, {
+  type AssignedAchievement,
+} from "./achievement-assign-dropdown";
 import LBAchievementBadge from "./lb-achievement-badge";
 import { type achievements } from "@prisma/client";
-import { type AchievementType } from "@/types/types";
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-
-type AssignedAchievement = {
-  title: AchievementType;
-  user_id: string;
-};
 
 export default function TopThreeWinners({
   winners,
   canAssignAchievements,
   leaderboardDate,
   achievements,
+  existingTitles,
+  onAssigned,
 }: {
   winners: Leaderboard[];
   canAssignAchievements: boolean;
   leaderboardDate: Date;
-  achievements: achievements[] | undefined;
+  achievements: achievements[];
+  existingTitles: AssignedAchievement[];
+  onAssigned: (achievement: AssignedAchievement) => void;
 }) {
-  const queryClient = useQueryClient();
-
-  const [existingTitles, setExistingTitles] = useState<AssignedAchievement[]>(
-    achievements?.map((item) => ({
-      title: item.title as AchievementType,
-      user_id: item.user_id,
-    })) ?? []
-  );
-
-  function handleAssigned(newAchievement: AssignedAchievement) {
-    setExistingTitles((prev) => [...prev, newAchievement]);
-    queryClient.invalidateQueries({
-      queryKey: [
-        "achievements",
-        `${leaderboardDate.getFullYear()}-${leaderboardDate.getMonth() + 1}`,
-      ],
-    });
-  }
-
   const sortedWinners = [...winners].sort((a, b) => a.rank - b.rank);
   const [firstPlace, secondPlace, thirdPlace] = sortedWinners.slice(0, 3);
 
@@ -63,9 +42,9 @@ export default function TopThreeWinners({
             size="md"
             hasAchievementChangePermission={canAssignAchievements}
             leaderboardDate={leaderboardDate}
-            achievements={achievements ?? []}
+            achievements={achievements}
             existingTitles={existingTitles}
-            onAssigned={handleAssigned}
+            onAssigned={onAssigned}
           />
         )}
       </div>
@@ -77,9 +56,9 @@ export default function TopThreeWinners({
             size="lg"
             hasAchievementChangePermission={canAssignAchievements}
             leaderboardDate={leaderboardDate}
-            achievements={achievements ?? []}
+            achievements={achievements}
             existingTitles={existingTitles}
-            onAssigned={handleAssigned}
+            onAssigned={onAssigned}
           />
         )}
       </div>
@@ -91,9 +70,9 @@ export default function TopThreeWinners({
             size="md"
             hasAchievementChangePermission={canAssignAchievements}
             leaderboardDate={leaderboardDate}
-            achievements={achievements ?? []}
+            achievements={achievements}
             existingTitles={existingTitles}
-            onAssigned={handleAssigned}
+            onAssigned={onAssigned}
           />
         )}
       </div>

@@ -13,11 +13,11 @@ const achievementConfig: Partial<
     style: "bg-rose-500/20 text-rose-500",
   },
   FIRST_RUNNER_UP: {
-    label: "1st Runner-up",
+    label: "1st Runner-Up",
     style: "bg-cyan-500/20 text-cyan-500",
   },
   SECOND_RUNNER_UP: {
-    label: "2nd Runner-up",
+    label: "2nd Runner-Up",
     style: "bg-lime-500/20 text-lime-500",
   },
   BEST_FEMALE_PROGRAMMER: {
@@ -42,7 +42,7 @@ export default function LBAchievementBadge({
   if (userAchievements.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className={cn("flex flex-col items-center gap-1", className)}>
       {userAchievements.map((achievement) => {
         const config = achievementConfig[achievement.title];
         if (!config) return null;
@@ -50,7 +50,7 @@ export default function LBAchievementBadge({
         return (
           <Badge
             key={achievement.title}
-            className={cn("pointer-events-none w-fit", config.style, className)}
+            className={cn("pointer-events-none w-fit", config.style)}
           >
             {config.label}
           </Badge>

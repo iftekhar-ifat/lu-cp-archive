@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { unwrapActionResult } from "@/utils/error-helper";
 import Error from "@/components/shared/error";
 import Loading from "@/components/shared/loading";
@@ -15,6 +15,9 @@ import TopThreeWinners from "../top-three-winners";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { hasPermission } from "@/utils/permissions";
+import { useState, useEffect } from "react";
+import { type AssignedAchievement } from "@/components/leaderboard/achievement-assign-dropdown";
+import { type AchievementType } from "@/types/types";
 
 export default function LeaderboardTableWrapper({
   leaderboardDate,
@@ -24,8 +27,11 @@ export default function LeaderboardTableWrapper({
   isPreviousLB: boolean;
 }) {
   const { data: session } = useSession();
+  const queryClient = useQueryClient();
 
-  // If previous Leaderboard is selected and if has permission then can assign achievements
+  const month = leaderboardDate.getMonth() + 1;
+  const year = leaderboardDate.getFullYear();
+
   const canAssignAchievements =
     isPreviousLB && session
       ? hasPermission(session.user.user_type, "assign-achievements")
@@ -38,51 +44,50 @@ export default function LeaderboardTableWrapper({
     error,
     refetch,
   } = useQuery({
-    queryKey: [
-      "leaderboard",
-      `${leaderboardDate.getFullYear()}-${leaderboardDate.getMonth() + 1}`,
-    ],
+    queryKey: ["leaderboard", `${year}-${month}`],
     queryFn: async () => {
-      const result = await getLeaderboard(
-        leaderboardDate.getMonth() + 1,
-        leaderboardDate.getFullYear()
-      );
-
+      const result = await getLeaderboard(month, year);
       const unwrappedResult = unwrapActionResult(result);
       if (!unwrappedResult) return undefined;
 
       const { topThree, rest } = isolateTopThree(unwrappedResult.leaderboard);
-
-      const lastUpdated = unwrappedResult.last_updated;
-
-      return {
-        topThree,
-        rest,
-        lastUpdated,
-      };
+      return { topThree, rest, lastUpdated: unwrappedResult.last_updated };
     },
     staleTime: Infinity,
   });
 
-  const { data: achievements, isLoading: achievementsLoading } = useQuery({
-    queryKey: [
-      "achievements",
-      `${leaderboardDate.getFullYear()}-${leaderboardDate.getMonth() + 1}`,
-    ],
-    queryFn: async () => {
-      const result = await getAchievementsByMonthYear(
-        leaderboardDate.getMonth() + 1,
-        leaderboardDate.getFullYear()
-      );
-      const unwrappedResult = unwrapActionResult(result);
+  const { data: fetchedAchievements, isLoading: achievementsLoading } =
+    useQuery({
+      queryKey: ["achievements", `${year}-${month}`],
+      queryFn: async () => {
+        const result = await getAchievementsByMonthYear(month, year);
+        const unwrappedResult = unwrapActionResult(result);
+        if (!unwrappedResult) return undefined;
+        return unwrappedResult; // return raw data, don't map here
+      },
+      staleTime: Infinity,
+      enabled: canAssignAchievements,
+    });
 
-      if (!unwrappedResult) return undefined;
+  const [existingTitles, setExistingTitles] = useState<AssignedAchievement[]>(
+    []
+  );
 
-      return unwrappedResult;
-    },
-    staleTime: Infinity,
-    enabled: canAssignAchievements,
-  });
+  useEffect(() => {
+    setExistingTitles(
+      fetchedAchievements?.map((a) => ({
+        title: a.title as AchievementType,
+        user_id: a.user_id,
+      })) ?? []
+    );
+  }, [fetchedAchievements]);
+
+  function handleAssigned(newAchievement: AssignedAchievement) {
+    setExistingTitles((prev) => [...prev, newAchievement]);
+    queryClient.invalidateQueries({
+      queryKey: ["achievements", `${year}-${month}`],
+    });
+  }
 
   if (isLoading || achievementsLoading || !leaderboardDate) {
     return <Loading />;
@@ -112,13 +117,21 @@ export default function LeaderboardTableWrapper({
           winners={leaderboardData.topThree}
           canAssignAchievements={canAssignAchievements}
           leaderboardDate={leaderboardDate}
-          achievements={achievements || []}
+          achievements={fetchedAchievements ?? []}
+          existingTitles={existingTitles}
+          onAssigned={handleAssigned}
         />
       </div>
       <LeaderboardTable
-        columns={leaderboard_table_column(canAssignAchievements)}
-        // data={leaderboardData.rest}
-        data={leaderboardData.topThree} // NEED TO FIX
+        columns={leaderboard_table_column(
+          canAssignAchievements,
+          existingTitles,
+          handleAssigned,
+          month,
+          year,
+          fetchedAchievements ?? []
+        )}
+        data={leaderboardData.rest}
       />
     </div>
   );
