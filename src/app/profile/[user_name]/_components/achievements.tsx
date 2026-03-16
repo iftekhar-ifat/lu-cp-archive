@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import AchievementDialog, {
@@ -11,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Medal } from "lucide-react";
+import { Medal, X } from "lucide-react";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { unwrapActionResult } from "@/utils/error-helper";
@@ -20,6 +21,7 @@ import { format } from "date-fns";
 import Loading from "@/components/shared/loading";
 import { getUserAchievements } from "../profile-actions";
 import { type User } from "next-auth";
+import NoData from "@/components/shared/no-data";
 
 const ACHIEVEMENT_IMAGE_MAP: Record<AchievementType, string> = {
   CHAMPION: "/assets/champion.svg",
@@ -37,8 +39,8 @@ const ACHIEVEMENT_COLOR_MAP: Record<AchievementType, string> = {
 
 const ACHIEVEMENT_LABEL_MAP: Record<AchievementType, string> = {
   CHAMPION: "Champion",
-  FIRST_RUNNER_UP: "1st Runner-up",
-  SECOND_RUNNER_UP: "2nd Runner-up",
+  FIRST_RUNNER_UP: "1st Runner-Up",
+  SECOND_RUNNER_UP: "2nd Runner-Up",
   BEST_FEMALE_PROGRAMMER: "Best Female Programmer",
 };
 
@@ -110,9 +112,7 @@ export default function Achievements({ user }: { user: User }) {
 
         <CardContent>
           {!badges || badges.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No achievements yet.
-            </p>
+            <NoData title="Don't worry, keep grinding" />
           ) : (
             <div
               className={cn(
@@ -122,24 +122,117 @@ export default function Achievements({ user }: { user: User }) {
                   : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
               )}
             >
-              {badges.map((badge) => (
-                <button
-                  key={badge.id}
-                  onClick={() => handleBadgeClick(badge)}
-                  className="group flex cursor-pointer flex-col items-center rounded-xl border bg-muted/30 p-4 text-center transition-all duration-300 hover:scale-[1.02] hover:bg-muted/60 hover:shadow-md"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={badge.image}
-                    alt={badge.title}
-                    className="mb-4 transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <p className="text-base font-semibold">{badge.title}</p>
-                  <p className="mt-1 font-mono text-xs text-muted-foreground/70">
-                    {badge.period}
-                  </p>
-                </button>
-              ))}
+              {badges.map((badge) =>
+                badge.extraBadge ? (
+                  <button
+                    key={badge.id}
+                    onClick={() => handleBadgeClick(badge)}
+                    style={{ boxShadow: `0 0 20px ${badge.color}20` }}
+                    className="group flex h-full w-full cursor-pointer flex-col items-center justify-between rounded-xl border bg-muted/30 p-4 text-center transition-all duration-300 hover:scale-[1.02] hover:bg-muted/60 hover:shadow-md"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="relative flex items-center justify-center">
+                        <div
+                          className="absolute rounded-full"
+                          style={{
+                            width: 60,
+                            height: 60,
+                            backgroundColor: badge.color,
+                            opacity: 0.15,
+                            filter: "blur(16px)",
+                          }}
+                        />
+                        <img
+                          src={badge.image}
+                          alt={badge.title}
+                          className="relative w-20 transition-transform duration-300 group-hover:scale-105"
+                          style={{
+                            filter: `drop-shadow(0 0 8px ${badge.color}60) drop-shadow(0 0 20px ${badge.color}30)`,
+                          }}
+                        />
+                      </div>
+                      <p
+                        className="mt-2 text-sm font-semibold"
+                        style={{ color: badge.color }}
+                      >
+                        {badge.title}
+                      </p>
+                    </div>
+
+                    <X className="my-1 size-5 text-muted-foreground" />
+
+                    <div className="flex flex-col items-center">
+                      <div className="relative flex items-center justify-center">
+                        <div
+                          className="absolute rounded-full"
+                          style={{
+                            width: 60,
+                            height: 60,
+                            backgroundColor: badge.color,
+                            opacity: 0.15,
+                            filter: "blur(16px)",
+                          }}
+                        />
+                        <img
+                          src={badge.image}
+                          alt={badge.title}
+                          className="relative w-20 transition-transform duration-300 group-hover:scale-105"
+                          style={{
+                            filter: `drop-shadow(0 0 8px ${badge.extraBadge.color}60) drop-shadow(0 0 20px ${badge.extraBadge.color}30)`,
+                          }}
+                        />
+                      </div>
+                      <p
+                        className="mt-2 text-sm font-semibold"
+                        style={{ color: badge.extraBadge.color }}
+                      >
+                        {badge.extraBadge.title}
+                      </p>
+                    </div>
+
+                    <p className="mt-2 rounded-full border px-3 py-1 font-mono text-xs text-muted-foreground/70">
+                      {badge.period}
+                    </p>
+                  </button>
+                ) : (
+                  <button
+                    key={badge.id}
+                    onClick={() => handleBadgeClick(badge)}
+                    style={{ boxShadow: `0 0 20px ${badge.color}20` }}
+                    className="group flex w-full cursor-pointer flex-col items-center self-start rounded-xl border bg-muted/30 p-4 text-center transition-all duration-300 hover:scale-[1.02] hover:bg-muted/60 hover:shadow-md"
+                  >
+                    <div className="relative mb-3 flex items-center justify-center">
+                      <div
+                        className="absolute rounded-full"
+                        style={{
+                          width: 80,
+                          height: 80,
+                          backgroundColor: badge.color,
+                          opacity: 0.15,
+                          filter: "blur(20px)",
+                        }}
+                      />
+                      <img
+                        src={badge.image}
+                        alt={badge.title}
+                        className="relative transition-transform duration-300 group-hover:scale-105"
+                        style={{
+                          filter: `drop-shadow(0 0 8px ${badge.color}60) drop-shadow(0 0 20px ${badge.color}30)`,
+                        }}
+                      />
+                    </div>
+                    <p
+                      className="text-base font-semibold"
+                      style={{ color: badge.color }}
+                    >
+                      {badge.title}
+                    </p>
+                    <p className="mt-2 rounded-full border px-3 py-1 font-mono text-xs text-muted-foreground/70">
+                      {badge.period}
+                    </p>
+                  </button>
+                )
+              )}
             </div>
           )}
         </CardContent>
