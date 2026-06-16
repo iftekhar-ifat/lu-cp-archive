@@ -84,8 +84,8 @@ export default function AchievementDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90dvh] max-w-sm gap-0 overflow-y-auto border-0 bg-transparent p-0 shadow-none [&>button]:hidden">
-        <div className="relative">
+      <DialogContent className="max-h-[90dvh] max-w-sm gap-0 overflow-y-auto overflow-x-hidden border-0 bg-transparent p-0 shadow-none [&>button]:hidden">
+        <div className="relative justify-items-center">
           {/* Close button */}
           <Button
             variant="ghost"
@@ -431,6 +431,7 @@ export default function AchievementDialog({
                           letterSpacing: "0.05em",
                           textAlign: "center",
                           opacity: 0.9,
+                          whiteSpace: "nowrap",
                           border: "none",
                         }}
                       >
@@ -567,6 +568,7 @@ export default function AchievementDialog({
                           fontFamily: "monospace",
                           fontSize: 12,
                           color: "#a3a3a3",
+                          whiteSpace: "nowrap",
                         }}
                       >
                         {b.title}
