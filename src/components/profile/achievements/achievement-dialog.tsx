@@ -84,7 +84,7 @@ export default function AchievementDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm gap-0 border-0 bg-transparent p-0 shadow-none [&>button]:hidden">
+      <DialogContent className="max-h-[90dvh] max-w-sm gap-0 overflow-y-auto border-0 bg-transparent p-0 shadow-none [&>button]:hidden">
         <div className="relative">
           {/* Close button */}
           <Button
@@ -507,6 +507,8 @@ export default function AchievementDialog({
                       fontSize: 14,
                       letterSpacing: "0.07em",
                       color: "#737373",
+                      wordBreak: "keep-all",
+                      whiteSpace: "nowrap",
                     }}
                   >
                     {badge.period}
@@ -632,7 +634,11 @@ export default function AchievementDialog({
         </div>
 
         {/* Download button */}
-        <div className="mt-3 flex justify-end px-1">
+        <div className="mt-3 flex items-center justify-between px-1">
+          <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+            <X className="h-4 w-4" />
+            Close
+          </Button>
           <Button
             variant="outline"
             size="sm"

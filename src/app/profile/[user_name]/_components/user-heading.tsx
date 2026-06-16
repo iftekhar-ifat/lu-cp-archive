@@ -16,8 +16,8 @@ export default function UserHeading({ userData }: { userData: users }) {
             <User className="h-10 w-10" />
           </AvatarFallback>
         </Avatar>
-        <div className="space-y-2">
-          <h1 className="font-mono text-2xl font-bold tracking-wide">
+        <div className="min-w-0 space-y-2">
+          <h1 className="font-mono text-2xl font-bold tracking-wide [overflow-wrap:anywhere]">
             {userData.name}
           </h1>
           <div className="flex items-center gap-2">
