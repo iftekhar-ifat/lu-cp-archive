@@ -13,7 +13,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "npm run lint:fix",
+      "next lint --no-cache --fix --file",
       "prettier --write"
     ],
     "*.{json,md}": [
